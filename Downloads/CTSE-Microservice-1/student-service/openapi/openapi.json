@@ -1,0 +1,208 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Student Service API",
+    "description": "Microservice for student registration and profile management. Integrates with Exam and Teacher services via HTTP (see /students/{id}/summary).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "/", "description": "Same origin (use Try it out in Swagger UI)" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Liveness / health check",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "service": { "type": "string", "example": "student-service" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/students": {
+      "get": {
+        "summary": "List all students",
+        "operationId": "listStudents",
+        "responses": {
+          "200": {
+            "description": "List of students",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "students": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Student" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a new student",
+        "operationId": "createStudent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StudentCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Student" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "409": { "description": "Duplicate studentId or email" }
+        }
+      }
+    },
+    "/students/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "get": {
+        "summary": "Get student by UUID",
+        "operationId": "getStudent",
+        "responses": {
+          "200": {
+            "description": "Student",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Student" }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      },
+      "put": {
+        "summary": "Update student",
+        "operationId": "updateStudent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StudentUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Student" }
+              }
+            }
+          },
+          "404": { "description": "Not found" },
+          "409": { "description": "Conflict" }
+        }
+      },
+      "delete": {
+        "summary": "Delete student",
+        "operationId": "deleteStudent",
+        "responses": {
+          "204": { "description": "Deleted" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/students/{id}/summary": {
+      "get": {
+        "summary": "Student profile plus integration data from Exam and Teacher services",
+        "description": "Calls EXAM_SERVICE_URL (/health, /exams/student/{studentId}) and optionally TEACHER_SERVICE_URL (/teachers/{id}) when DEMO_TEACHER_ID is set. Align paths with your teammates' OpenAPI specs.",
+        "operationId": "getStudentSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "student": { "$ref": "#/components/schemas/Student" },
+                    "integrations": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Student not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Student": {
+        "type": "object",
+        "required": ["id", "studentId", "fullName", "email", "programme", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "studentId": { "type": "string", "example": "IT2024001" },
+          "fullName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "programme": { "type": "string", "example": "BSc Software Engineering" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "StudentCreate": {
+        "type": "object",
+        "required": ["studentId", "fullName", "email", "programme"],
+        "properties": {
+          "studentId": { "type": "string" },
+          "fullName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "programme": { "type": "string" }
+        }
+      },
+      "StudentUpdate": {
+        "type": "object",
+        "properties": {
+          "studentId": { "type": "string" },
+          "fullName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "programme": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Student Service API
+  description: |
+    Student registration and profiles. HTTP integration with Exam and Teacher services
+    is demonstrated via GET /students/{id}/summary (configure EXAM_SERVICE_URL, TEACHER_SERVICE_URL).
+  version: 1.0.0
+servers:
+  - url: /
+    description: Same host (Swagger Try it out)
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: OK
+  /students:
+    get:
+      summary: List students
+      operationId: listStudents
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create student
+      operationId: createStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreate'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Validation error
+        '409':
+          description: Duplicate
+  /students/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get by id
+      operationId: getStudent
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not found
+    put:
+      summary: Update
+      operationId: updateStudent
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: Delete
+      operationId: deleteStudent
+      responses:
+        '204':
+          description: No content
+  /students/{id}/summary:
+    get:
+      summary: Student + peer service integration
+      operationId: getStudentSummary
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not found
+components:
+  schemas:
+    StudentCreate:
+      type: object
+      required: [studentId, fullName, email, programme]
+      properties:
+        studentId:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        programme:
+          type: string

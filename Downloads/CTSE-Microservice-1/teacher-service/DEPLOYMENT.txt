@@ -1,0 +1,20 @@
+Teacher Service — deployment checklist (SE4010)
+=================================================
+
+1) Environment variables
+   - PORT (default 3001 in code and Docker image)
+   - NODE_ENV=production
+   - STUDENT_SERVICE_URL — Student microservice base URL
+   - EXAM_SERVICE_URL — Exam microservice base URL
+   - DEMO_STUDENT_UUID — optional; UUID from GET /students for integration demo
+
+2) SonarCloud
+   - Create a second project in SonarCloud for `teacher-service` or use a unique sonar.projectKey in sonar-project.properties.
+   - Same SONAR_TOKEN as other repos in your org usually works.
+
+3) Integration paths (coordinate with teammates)
+   - Student: GET {STUDENT_SERVICE_URL}/health, GET {STUDENT_SERVICE_URL}/students/{uuid}
+   - Exam: GET {EXAM_SERVICE_URL}/health, GET {EXAM_SERVICE_URL}/exams/teacher/{teacherId}
+   - Change src/services/integrationClient.js if their OpenAPI differs.
+
+4) Student Service calls this service at GET /teachers/{uuid} — matches our OpenAPI.

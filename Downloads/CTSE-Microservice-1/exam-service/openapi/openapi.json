@@ -1,0 +1,279 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Exam Service API",
+    "description": "Exam scheduling and enrolment. Integration with Teacher and Student services via GET /exams/{id}/summary (TEACHER_SERVICE_URL, STUDENT_SERVICE_URL, optional DEMO_TEACHER_UUID, DEMO_STUDENT_UUID).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "/", "description": "Same origin (use Try it out in Swagger UI)" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "service": { "type": "string", "example": "exam-service" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exams": {
+      "get": {
+        "summary": "List exams",
+        "operationId": "listExams",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exams": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Exam" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create exam",
+        "operationId": "createExam",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ExamCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Exam" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "409": { "description": "Duplicate" }
+        }
+      }
+    },
+    "/exams/teacher/{teacherId}": {
+      "parameters": [
+        {
+          "name": "teacherId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "get": {
+        "summary": "List exams for teacher (business id)",
+        "operationId": "listExamsForTeacher",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exams": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Exam" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/exams/student/{studentId}": {
+      "parameters": [
+        {
+          "name": "studentId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "get": {
+        "summary": "List exams for student (business id)",
+        "operationId": "listExamsForStudent",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exams": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Exam" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/exams/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "get": {
+        "summary": "Get exam by UUID",
+        "operationId": "getExam",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Exam" }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      },
+      "put": {
+        "summary": "Update exam",
+        "operationId": "updateExam",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ExamUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Exam" }
+              }
+            }
+          },
+          "404": { "description": "Not found" },
+          "409": { "description": "Conflict" }
+        }
+      },
+      "delete": {
+        "summary": "Delete exam",
+        "operationId": "deleteExam",
+        "responses": {
+          "204": { "description": "No content" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/exams/{id}/summary": {
+      "get": {
+        "summary": "Exam + Teacher/Student integration",
+        "description": "Uses TEACHER_SERVICE_URL, STUDENT_SERVICE_URL, optional DEMO_TEACHER_UUID, DEMO_STUDENT_UUID.",
+        "operationId": "getExamSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "OK" },
+          "404": { "description": "Not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Exam": {
+        "type": "object",
+        "required": ["id", "examId", "title", "courseCode", "teacherId", "enrolledStudentIds", "scheduledAt", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "examId": { "type": "string", "example": "EX2024001" },
+          "title": { "type": "string" },
+          "courseCode": { "type": "string" },
+          "teacherId": { "type": "string" },
+          "enrolledStudentIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "venue": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ExamCreate": {
+        "type": "object",
+        "required": ["examId", "title", "courseCode", "teacherId", "scheduledAt"],
+        "properties": {
+          "examId": { "type": "string" },
+          "title": { "type": "string" },
+          "courseCode": { "type": "string" },
+          "teacherId": { "type": "string" },
+          "enrolledStudentIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "venue": { "type": "string" }
+        }
+      },
+      "ExamUpdate": {
+        "type": "object",
+        "properties": {
+          "examId": { "type": "string" },
+          "title": { "type": "string" },
+          "courseCode": { "type": "string" },
+          "teacherId": { "type": "string" },
+          "enrolledStudentIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "venue": { "type": "string" }
+        }
+      }
+    }
+  }
+}
